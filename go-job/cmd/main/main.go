@@ -3,8 +3,10 @@ package main
 import (
 	"os"
 
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/mysterybee07/go-react-job/database"
+	"github.com/mysterybee07/go-react-job/routes"
 	"github.com/mysterybee07/go-react-job/utils"
 )
 
@@ -21,6 +23,15 @@ func main() {
 	}
 
 	r := gin.Default()
+	// Enable CORS for all routes (adjust options as needed)
+	r.Use(cors.New(cors.Config{
+		AllowOrigins:     []string{"http://localhost:3000"},                   // Frontend URL
+		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE"},            // Allowed methods
+		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"}, // Allowed headers
+		AllowCredentials: true,
+	}))
+
+	routes.JobRoutes(r)
 
 	// Example route
 	r.GET("", func(c *gin.Context) {

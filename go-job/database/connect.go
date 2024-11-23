@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 
+	"github.com/mysterybee07/go-react-job/models"
 	"github.com/mysterybee07/go-react-job/utils"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
@@ -44,5 +45,12 @@ func ConnectDB() {
 
 	// Log successful connection
 	log.Println("Connected to database successfully")
+
+	if err := DB.AutoMigrate(
+		models.Company{},
+		models.Job{},
+	); err != nil {
+		panic("Error migrating to database")
+	}
 
 }
