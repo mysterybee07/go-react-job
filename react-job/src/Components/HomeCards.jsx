@@ -5,7 +5,7 @@ import Card from './Card'
 const HomeCards = () => {
     return (
         <>
-            <section className="py-4">
+            <section className="bg-slate-200">
                 <div className="container-xl lg:container m-auto">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 rounded-lg">
                         <Card>
@@ -20,7 +20,7 @@ const HomeCards = () => {
                                 Browse Jobs
                             </Link>
                         </Card>
-                        <Card bg='bg-indigo-100'>
+                        <Card bg='bg-slate-300'>
                         <h2 className="text-2xl font-bold">For Employers</h2>
                             <p className="mt-2 mb-4">
                                 List your job to find the perfect developer for the role
