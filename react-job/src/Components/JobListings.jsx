@@ -39,7 +39,8 @@ const JobListings = ({ isHome = false }) => {
                     {loading ? (
                         <Spinner loading={loading} />
                     ) : (
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 ">
+                        {/* <div className="flex flex-row jus"> */}
                             {jobs.map((job) => (
                                 <JobListing key={job.id} job={job} />
                             ))}
