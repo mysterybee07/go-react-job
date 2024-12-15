@@ -12,11 +12,3 @@ type Job struct {
 	CompanyID   uint    `json:"company_id"`
 	Company     Company `json:"company" gorm:"foreignKey:CompanyID"`
 }
-
-type Company struct {
-	*gorm.Model
-	Name         string `json:"name"`
-	Description  string `json:"description"`
-	ContactEmail string `json:"contact_email"`
-	ContactPhone string `json:"contact_phone"`
-}

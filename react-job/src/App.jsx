@@ -59,8 +59,7 @@ const App = () => {
         <Route path='/edit-job/:id' element={<EditJobPage updateJobSubmit={updatedJob}/>}  loader={jobLoader} />      
         {/* <Route path='/*' element={<NotFoundPage />} />       */}
         <Route path='/*' element={<NotFoundPage />} />      
-      </Route>
-  
+      </Route>  
     )
   )
 

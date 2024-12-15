@@ -37,10 +37,12 @@ func CreateJob(c *gin.Context) {
 		if err == gorm.ErrRecordNotFound {
 			// Create the company if it doesn't exist
 			company = models.Company{
-				Name:         jobRequest.Company.Name,
-				Description:  jobRequest.Company.Description,
-				ContactEmail: jobRequest.Company.ContactEmail,
-				ContactPhone: jobRequest.Company.ContactPhone,
+				Description: jobRequest.Company.Description,
+				ContactInfo: models.ContactInfo{
+					Name:         jobRequest.Company.Name,
+					ContactEmail: jobRequest.Company.ContactEmail,
+					ContactPhone: jobRequest.Company.ContactPhone,
+				},
 			}
 			if err := database.DB.Create(&company).Error; err != nil {
 				c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not create company"})

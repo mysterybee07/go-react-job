@@ -47,6 +47,7 @@ func ConnectDB() {
 	log.Println("Connected to database successfully")
 
 	if err := DB.AutoMigrate(
+		models.User{},
 		models.Company{},
 		models.Job{},
 	); err != nil {
