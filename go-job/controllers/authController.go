@@ -167,3 +167,35 @@ func Logout(c *gin.Context) {
 		"timestamp": time.Now(),
 	})
 }
+
+func RefreshToken(c *gin.Context) {
+	// Retrieve the refresh token from cookies
+	refreshToken, err := c.Cookie("refresh_token")
+	if err != nil || refreshToken == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Refresh token missing or invalid"})
+		return
+	}
+
+	// Validate the refresh token
+	claims, err := utils.ValidateJWT(refreshToken, true)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid refresh token: " + err.Error()})
+		return
+	}
+
+	// Generate a new access token (reusing user details from the refresh token)
+	newAccessToken, _, err := utils.GenerateJWT(claims.UserID, claims.Name, claims.Email)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate new access token"})
+		return
+	}
+
+	// Update the access token in cookies
+	utils.SetCookies(c, newAccessToken, refreshToken)
+
+	// Send the new access token as a response
+	c.JSON(http.StatusOK, gin.H{
+		"access_token": newAccessToken,
+		"message":      "New access token generated successfully",
+	})
+}
