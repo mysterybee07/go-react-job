@@ -6,7 +6,6 @@ import (
 	"os"
 
 	"github.com/mysterybee07/go-react-job/models"
-	"github.com/mysterybee07/go-react-job/utils"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 )
@@ -15,8 +14,6 @@ var DB *gorm.DB
 
 func ConnectDB() {
 	var err error
-	utils.LoadEnv()
-
 	// Read environment variables
 	dbUser := os.Getenv("DB_USER")
 	dbPassword := os.Getenv("DB_PASSWORD")

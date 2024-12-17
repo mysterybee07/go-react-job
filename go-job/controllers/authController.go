@@ -12,22 +12,27 @@ import (
 
 	"github.com/mysterybee07/go-react-job/database"
 	"github.com/mysterybee07/go-react-job/models"
+	"github.com/mysterybee07/go-react-job/payloads"
 	"github.com/mysterybee07/go-react-job/utils"
 )
 
-func Register(c *gin.Context) {
-	var input models.RegisterUser
+func RegisterUser(c *gin.Context) {
+	var input payloads.RegisterUser
 
 	if err := c.ShouldBindJSON(&input); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("Failed to parse JSON body. Details: %s", err.Error())})
+		c.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf(
+			"Failed to parse JSON body. Details: %s", err.Error(),
+		)})
 		return
 	}
-	fmt.Println(len(input.Password))
+	// fmt.Println(len(input.Password))
 
 	hashPassword, err := utils.HashPassword(input.Password)
 	if err != nil {
 		log.Printf("Failed to hash password for user %s: %v", input.ContactEmail, err)
-		c.JSON(http.StatusBadRequest, gin.H{"message": "Failed to process password"})
+		c.JSON(http.StatusBadRequest, gin.H{
+			"message": "Failed to process password",
+		})
 		return
 	}
 
@@ -39,6 +44,7 @@ func Register(c *gin.Context) {
 			ContactEmail: input.ContactEmail,
 			ContactPhone: input.ContactPhone,
 			ImageUrl:     input.ImageUrl,
+			Address:      input.Address,
 		},
 		Resume:   input.Resume,
 		Password: input.Password,
@@ -46,18 +52,64 @@ func Register(c *gin.Context) {
 
 	var existingUser models.User
 	if err := database.DB.Where("contact_email = ? OR contact_phone = ?", user.ContactEmail, user.ContactPhone).First(&existingUser).Error; err != gorm.ErrRecordNotFound {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Email or phone number already exists."})
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "Email or phone number already exists.",
+		})
 		return
 	}
 
 	if err := database.DB.Create(&user).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not create user. Please try again."})
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Could not create user. Please try again.",
+		})
 		return
 	}
 
 	c.JSON(http.StatusOK, gin.H{
 		"user":    user,
 		"message": "User created successfully",
+	})
+}
+
+func RegisterCompany(c *gin.Context) {
+	var input payloads.RegisterCompany
+
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": fmt.Sprintf("Error parsing data. Details: %v", err.Error()),
+		})
+		return
+	}
+
+	hashPassword, err := utils.HashPassword(input.Password)
+	if err != nil {
+		log.Printf("Failed to hash password for user %s: %v", input.ContactEmail, err)
+		c.JSON(http.StatusBadRequest, gin.H{
+			"message": "Failed to process password",
+		})
+		return
+	}
+	input.Password = hashPassword
+	company := models.Company{
+		ContactInfo: models.ContactInfo{
+			Name:         input.Name,
+			ContactEmail: input.ContactEmail,
+			ContactPhone: input.ContactPhone,
+			ImageUrl:     input.ImageUrl,
+			Address:      input.Address,
+		},
+		Description: input.Description,
+		Password:    input.Password,
+	}
+	if err := database.DB.Create(&company).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": fmt.Sprintf("Unable to create company. Details: %v", err.Error()),
+		})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{
+		"message": "company created successfully",
+		"company": company,
 	})
 }
 
@@ -70,21 +122,27 @@ func Login(c *gin.Context) {
 
 	// Bind JSON to struct
 	if err := c.ShouldBindJSON(&loginData); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("Error parsing data. Details: %v", err.Error())})
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": fmt.Sprintf("Error parsing data. Details: %v", err.Error()),
+		})
 		return
 	}
 
 	// Fetch user from database
 	var user models.User
 	if err := database.DB.Where("contact_email = ?", loginData.ContactEmail).First(&user).Error; err == gorm.ErrRecordNotFound {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Email not found."})
+		c.JSON(http.StatusNotFound, gin.H{
+			"error": "Email not found.",
+		})
 		return
 	}
 
 	// Check if the provided password matches
 	match := utils.CheckPasswordHash(loginData.Password, user.Password)
 	if !match {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Incorrect password."})
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"error": "Incorrect password.",
+		})
 		return
 	}
 
@@ -92,7 +150,9 @@ func Login(c *gin.Context) {
 	// Generate JWT
 	token, refreshToken, err := utils.GenerateJWT(userID, user.Name, user.ContactEmail)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("Error generating tokens: %v", err.Error())})
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": fmt.Sprintf("Error generating tokens: %v", err.Error()),
+		})
 		return
 	}
 
@@ -172,21 +232,27 @@ func RefreshToken(c *gin.Context) {
 	// Retrieve the refresh token from cookies
 	refreshToken, err := c.Cookie("refresh_token")
 	if err != nil || refreshToken == "" {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Refresh token missing or invalid"})
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"error": "Refresh token missing or invalid",
+		})
 		return
 	}
 
 	// Validate the refresh token
 	claims, err := utils.ValidateJWT(refreshToken, true)
 	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid refresh token: " + err.Error()})
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"error": "Invalid refresh token: " + err.Error(),
+		})
 		return
 	}
 
 	// Generate a new access token (reusing user details from the refresh token)
 	newAccessToken, _, err := utils.GenerateJWT(claims.UserID, claims.Name, claims.Email)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate new access token"})
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Failed to generate new access token",
+		})
 		return
 	}
 

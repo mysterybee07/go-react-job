@@ -18,10 +18,15 @@ func JobRoutes(router *gin.Engine) {
 
 	users := router.Group("/users")
 	{
-		users.POST("/register", controllers.Register)
+		users.POST("/register", controllers.RegisterUser)
 		users.POST("/login", controllers.Login)
 		users.POST("/logout", controllers.Logout)
 		users.GET("/authorize", middleware.AuthMiddleware(), controllers.AuthorizedUser)
 		users.POST("/refresh-token", controllers.RefreshToken)
+	}
+
+	company := router.Group("/company")
+	{
+		company.POST("/register", controllers.RegisterCompany)
 	}
 }
