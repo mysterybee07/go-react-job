@@ -8,16 +8,16 @@ const JobListings = ({ isHome = false }) => {
     const [jobs, setJobs] = useState([]);
     const [loading, setLoading] = useState(true);
     useEffect(() => {
-        const apiUrl = isHome ? '/api/jobs?_limit=3':'/api/jobs';
+        const apiUrl = isHome ? '/api/jobs?limit=3':'/api/jobs';
 
         const fetchJobs = async () => {
             try {
                 const res = await fetch(apiUrl);
                 const data = await res.json();
-                // console.log(data);
-                setJobs(data);
+                console.log(data);
+                setJobs(data.jobs);
             } catch (error) {
-                console.log("Error fetching data", error)
+                console.log("Error fetching data", error);
             } finally {
                 setLoading(false);
             }

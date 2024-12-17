@@ -25,9 +25,10 @@ func JobRoutes(router *gin.Engine) {
 		users.POST("/refresh-token", controllers.RefreshToken)
 	}
 
-	company := router.Group("/company")
+	company := router.Group("/companies")
 	{
 		company.POST("/register", controllers.RegisterCompany)
 		company.GET("/jobs", controllers.GetJobsByCompany)
+		company.GET("", controllers.GetAllCompany)
 	}
 }

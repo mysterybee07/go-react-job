@@ -3,6 +3,7 @@ package controllers
 import (
 	"fmt"
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"github.com/mysterybee07/go-react-job/database"
@@ -35,12 +36,36 @@ func CreateJob(c *gin.Context) {
 
 func GetJobs(c *gin.Context) {
 	var jobs []models.Job
-	if err := database.DB.Find(&jobs).Error; err != nil {
+
+	// Fetch the 'limit' query parameter
+	limitStr := c.Query("limit") // Get 'limit' from the query string
+	limit := 0                   // Default limit: 0 (no limit)
+
+	// Parse the 'limit' parameter to an integer
+	if limitStr != "" {
+		parsedLimit, err := strconv.Atoi(limitStr)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid limit parameter"})
+			return
+		}
+		limit = parsedLimit
+	}
+
+	// Modify the database query to include the limit
+	query := database.DB
+	if limit > 0 {
+		query = query.Limit(limit)
+	}
+
+	if err := query.Find(&jobs).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	c.JSON(http.StatusOK, jobs)
+	// Return the jobs
+	c.JSON(http.StatusOK, gin.H{
+		"jobs": jobs,
+	})
 }
 
 func GetJobByID(c *gin.Context) {
