@@ -128,16 +128,40 @@ func Login(c *gin.Context) {
 		return
 	}
 
-	// Fetch user from database
+	// Check for the email in User table
 	var user models.User
-	if err := database.DB.Where("contact_email = ?", loginData.ContactEmail).First(&user).Error; err == gorm.ErrRecordNotFound {
-		c.JSON(http.StatusNotFound, gin.H{
-			"error": "Email not found.",
+	err := database.DB.Where("contact_email = ?", loginData.ContactEmail).First(&user).Error
+
+	if err != nil {
+		// If not found in User, attempt Company login
+		token, refreshToken, err := utils.CompanyLogin(loginData.ContactEmail, loginData.Password)
+		if err != nil {
+			if err.Error() == "invalid password" {
+				c.JSON(http.StatusUnauthorized, gin.H{
+					"error": "Incorrect password.",
+				})
+			} else {
+				c.JSON(http.StatusNotFound, gin.H{
+					"error": "Email not found.",
+				})
+			}
+			return
+		}
+
+		// Set cookies for company
+		utils.SetCookies(c, token, refreshToken)
+
+		// Send response for company
+		c.JSON(http.StatusOK, gin.H{
+			"access_token":  token,
+			"refresh_token": refreshToken,
+			"user_type":     "company",
+			"message":       "Login successful",
 		})
 		return
 	}
 
-	// Check if the provided password matches
+	// Validate password for user
 	match := utils.CheckPasswordHash(loginData.Password, user.Password)
 	if !match {
 		c.JSON(http.StatusUnauthorized, gin.H{
@@ -146,8 +170,8 @@ func Login(c *gin.Context) {
 		return
 	}
 
+	// Generate JWT tokens for user
 	userID := strconv.Itoa(int(user.ID))
-	// Generate JWT
 	token, refreshToken, err := utils.GenerateJWT(userID, user.Name, user.ContactEmail)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
@@ -156,13 +180,14 @@ func Login(c *gin.Context) {
 		return
 	}
 
-	// Set cookies
+	// Set cookies for user
 	utils.SetCookies(c, token, refreshToken)
 
-	// Send response
+	// Send response for user
 	c.JSON(http.StatusOK, gin.H{
 		"access_token":  token,
 		"refresh_token": refreshToken,
+		"user_type":     "user",
 		"message":       "Login successful",
 	})
 }
