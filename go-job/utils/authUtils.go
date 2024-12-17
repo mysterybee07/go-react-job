@@ -1,9 +1,11 @@
 package utils
 
 import (
+	"errors"
 	"fmt"
 	"strconv"
 
+	"github.com/gin-gonic/gin"
 	"github.com/mysterybee07/go-react-job/database"
 	"github.com/mysterybee07/go-react-job/models"
 	"golang.org/x/crypto/bcrypt"
@@ -43,4 +45,30 @@ func CompanyLogin(email, password string) (token, refreshToken string, err error
 	}
 
 	return token, refreshToken, nil
+}
+
+// ExtractUserID extracts the UserID or CompanyID from the JWT token
+func ExtractUserID(c *gin.Context) (uint, error) {
+	// Get the token from the cookie
+	token, err := c.Cookie("access_token")
+	if err != nil {
+		return 0, errors.New("token not found")
+	}
+
+	// Validate the token
+	claims, err := ValidateJWT(token, false) // false means it's not a refresh token
+	if err != nil {
+		return 0, errors.New("invalid token")
+	}
+
+	// Convert user_id to uint
+	if claims.UserID == "" {
+		return 0, errors.New("user_id not found in token")
+	}
+	userID, err := strconv.ParseUint(claims.UserID, 10, 32)
+	if err != nil {
+		return 0, errors.New("invalid user_id format")
+	}
+
+	return uint(userID), nil
 }

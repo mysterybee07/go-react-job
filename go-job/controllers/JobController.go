@@ -1,84 +1,35 @@
 package controllers
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 	"github.com/mysterybee07/go-react-job/database"
 	"github.com/mysterybee07/go-react-job/models"
+	"github.com/mysterybee07/go-react-job/utils"
 	"gorm.io/gorm"
 )
 
 // Create a new job
 func CreateJob(c *gin.Context) {
-	var jobRequest struct {
-		Title       string `json:"title"`
-		Type        string `json:"type"`
-		Location    string `json:"location"`
-		Description string `json:"description"`
-		Salary      string `json:"salary"`
-		Company     struct {
-			Name         string `json:"name"`
-			Description  string `json:"description"`
-			ContactEmail string `json:"contactEmail"`
-			ContactPhone string `json:"contactPhone"`
-		} `json:"company"`
-	}
-
+	var job models.Job
 	// Parse the JSON body
-	if err := c.ShouldBindJSON(&jobRequest); err != nil {
+	if err := c.ShouldBindJSON(&job); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	// Check if the company already exists
-	var company models.Company
-	if err := database.DB.Where("name = ?", jobRequest.Company.Name).First(&company).Error; err != nil {
-		if err == gorm.ErrRecordNotFound {
-			// Create the company if it doesn't exist
-			company = models.Company{
-				Description: jobRequest.Company.Description,
-				ContactInfo: models.ContactInfo{
-					Name:         jobRequest.Company.Name,
-					ContactEmail: jobRequest.Company.ContactEmail,
-					ContactPhone: jobRequest.Company.ContactPhone,
-				},
-			}
-			if err := database.DB.Create(&company).Error; err != nil {
-				c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not create company"})
-				return
-			}
-		} else {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error fetching company"})
-			return
-		}
-	}
-
-	// Create the job and associate the company
-	job := models.Job{
-		Title:       jobRequest.Title,
-		Type:        jobRequest.Type,
-		Location:    jobRequest.Location,
-		Description: jobRequest.Description,
-		Salary:      jobRequest.Salary,
-		CompanyID:   company.ID, // Associate the company ID
-	}
-
 	if err := database.DB.Create(&job).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not create job"})
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": fmt.Sprintf("Error creating job. Details: %v", err.Error()),
+		})
 		return
 	}
-
-	// Fetch the job along with the company details
-	var createdJob models.Job
-	if err := database.DB.Preload("Company").First(&createdJob, job.ID).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not fetch job details"})
-		return
-	}
-
 	// Return the created job
 	c.JSON(http.StatusOK, gin.H{
-		"job": createdJob,
+		"message": "job created successfully",
+		"job":     job,
 	})
 }
 
@@ -129,4 +80,30 @@ func DeleteJob(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "Job deleted successfully"})
+}
+
+func GetJobsByCompany(c *gin.Context) {
+	// Extract company ID from JWT token
+	companyID, err := utils.ExtractUserID(c)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"error": "Unauthorized: " + err.Error(),
+		})
+		return
+	}
+
+	// Fetch jobs for the company
+	var jobs []models.Job
+	if err := database.DB.Where("company_id = ?", companyID).Preload("Company").Find(&jobs).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Failed to fetch jobs.",
+		})
+		return
+	}
+
+	// Return the jobs as JSON response
+	c.JSON(http.StatusOK, gin.H{
+		"company_id": companyID,
+		"jobs":       jobs,
+	})
 }

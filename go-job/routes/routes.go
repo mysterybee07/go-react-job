@@ -28,5 +28,6 @@ func JobRoutes(router *gin.Engine) {
 	company := router.Group("/company")
 	{
 		company.POST("/register", controllers.RegisterCompany)
+		company.GET("/jobs", controllers.GetJobsByCompany)
 	}
 }
