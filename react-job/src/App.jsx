@@ -37,7 +37,7 @@ const App = () => {
     // console.log('delete', id);
   };
 
-  const updatedJob = async (job) => {
+  const updateJob = async (job) => {
     const res = await fetch(`/api/jobs/${job.id}`,{
       method: 'PUT',
       headers: {
@@ -56,7 +56,7 @@ const App = () => {
         <Route path='/jobs' element={<JobsPage />} />      
         <Route path='/add-job' element={<AddJobPage addJobSubmit={addJob}/>} />      
         <Route path='/jobs/:id' element={<JobPage deleteJob={deleteJob}/>}  loader={jobLoader} />      
-        <Route path='/edit-job/:id' element={<EditJobPage updateJobSubmit={updatedJob}/>}  loader={jobLoader} />      
+        <Route path='/edit-job/:id' element={<EditJobPage updateJobSubmit={updateJob}/>}  loader={jobLoader} />      
         {/* <Route path='/*' element={<NotFoundPage />} />       */}
         <Route path='/*' element={<NotFoundPage />} />      
       </Route>  

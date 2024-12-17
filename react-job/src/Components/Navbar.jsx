@@ -35,6 +35,16 @@ const Navbar = () => {
                                     >Home</NavLink
                                     >
                                     <NavLink
+                                        to="/login"
+                                        className={ linkClass }
+                                    >Sign In</NavLink
+                                    >
+                                    <NavLink
+                                        to="/register"
+                                        className={ linkClass }
+                                    >Register</NavLink
+                                    >
+                                    {/* <NavLink
                                         to="/jobs"
                                         className={ linkClass }
                                     >Jobs</NavLink
@@ -43,7 +53,7 @@ const Navbar = () => {
                                         to="/add-job"
                                         className={linkClass}
                                     >Add Job</NavLink
-                                    >
+                                    > */}
                                 </div>
                             </div>
                         </div>
