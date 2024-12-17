@@ -28,7 +28,7 @@ const AddJobPage = ({ addJobSubmit }) => {
             toast.error('Please select a company.');
             return;
         }
-    
+
         const newJob = {
             title,
             type,
