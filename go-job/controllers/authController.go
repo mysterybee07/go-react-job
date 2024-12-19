@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"strconv"
 	"time"
 
@@ -64,6 +65,24 @@ func RegisterUser(c *gin.Context) {
 		})
 		return
 	}
+	imageUrl, err := utils.UploadImage(c)
+	if err != nil {
+		database.DB.Delete(&user)
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": fmt.Sprintf("Error uploading image. Error: %v", err.Error()),
+		})
+		return
+	}
+	user.ImageUrl = imageUrl
+	if err := database.DB.Save(&user).Error; err != nil {
+		// In case of error while updating user with image, delete the image file and rollback the user creation
+		os.Remove(imageUrl)
+
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Failed to update user image",
+		})
+		return
+	}
 
 	c.JSON(http.StatusOK, gin.H{
 		"user":    user,
@@ -74,6 +93,7 @@ func RegisterUser(c *gin.Context) {
 func RegisterCompany(c *gin.Context) {
 	var input payloads.RegisterCompany
 
+	// Bind JSON input
 	if err := c.ShouldBindJSON(&input); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"error": fmt.Sprintf("Error parsing data. Details: %v", err.Error()),
@@ -81,6 +101,7 @@ func RegisterCompany(c *gin.Context) {
 		return
 	}
 
+	// Hash password
 	hashPassword, err := utils.HashPassword(input.Password)
 	if err != nil {
 		log.Printf("Failed to hash password for user %s: %v", input.ContactEmail, err)
@@ -90,6 +111,8 @@ func RegisterCompany(c *gin.Context) {
 		return
 	}
 	input.Password = hashPassword
+
+	// Create company instance
 	company := models.Company{
 		ContactInfo: models.ContactInfo{
 			Name:         input.Name,
@@ -101,14 +124,46 @@ func RegisterCompany(c *gin.Context) {
 		Description: input.Description,
 		Password:    input.Password,
 	}
+
+	// Attempt to create company in DB
 	if err := database.DB.Create(&company).Error; err != nil {
+		log.Printf("Unable to create company: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": fmt.Sprintf("Unable to create company. Details: %v", err.Error()),
 		})
 		return
 	}
+
+	imageUrl, err := utils.UploadImage(c)
+	if err != nil {
+		log.Printf("Error uploading image for company %s: %v", input.Name, err)
+
+		// Rollback by deleting created company if image upload fails
+		database.DB.Delete(&company)
+
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": fmt.Sprintf("Error uploading image. Error: %v", err.Error()),
+		})
+		return
+	}
+
+	// Update company with image URL
+	company.ImageUrl = imageUrl
+	if err := database.DB.Save(&company).Error; err != nil {
+		log.Printf("Failed to update user image for %s: %v", input.Name, err)
+
+		// Delete uploaded image file in case of failure
+		os.Remove(imageUrl)
+
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Failed to update user image",
+		})
+		return
+	}
+
+	// Successfully created company response
 	c.JSON(http.StatusOK, gin.H{
-		"message": "company created successfully",
+		"message": "Company created successfully",
 		"company": company,
 	})
 }

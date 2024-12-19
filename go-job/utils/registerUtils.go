@@ -1,5 +1,73 @@
 package utils
 
+import (
+	"fmt"
+	"log"
+	"math/rand"
+	"os"
+	"path/filepath"
+	"regexp"
+	"strings"
+	"time"
+
+	"github.com/gin-gonic/gin"
+)
+
+var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
+
+// UploadImage handles image uploads in Gin
+func UploadImage(c *gin.Context) (string, error) {
+	// Retrieve the uploaded file
+	file, err := c.FormFile("image_url")
+	if err != nil {
+		log.Println("Failed to get form file:", err)
+		return "", fmt.Errorf("failed to get form file: %v", err)
+	}
+
+	// Validate that the file is an image by checking its MIME type
+	fileType := file.Header.Get("Content-Type")
+	if !strings.HasPrefix(fileType, "image/") {
+		log.Println("Uploaded file is not an image:", fileType)
+		return "", fmt.Errorf("uploaded file is not an image: %s", fileType)
+	}
+
+	// Generate a random file name and sanitize it
+	fileName := RandLetter(5) + "-" + SanitizeFileName(file.Filename)
+	filePath := filepath.Join("./uploads", fileName)
+
+	// Ensure the upload directory exists
+	uploadDir := filepath.Dir(filePath)
+	if err := os.MkdirAll(uploadDir, os.ModePerm); err != nil {
+		log.Println("Failed to create upload directory:", err)
+		return "", fmt.Errorf("failed to create upload directory: %v", err)
+	}
+
+	// Save the image file
+	if err := c.SaveUploadedFile(file, filePath); err != nil {
+		log.Println("Failed to save image file:", err)
+		return "", fmt.Errorf("failed to save image file: %v", err)
+	}
+
+	// Return the file path of the saved image
+	return filePath, nil
+}
+
+// RandLetter generates a random string of length n using letters.
+func RandLetter(n int) string {
+	b := make([]rune, n)
+	rand.Seed(time.Now().UnixNano()) // time.Now().UnixNano() is int64, suitable for math/rand
+	for i := range b {
+		b[i] = letters[rand.Intn(len(letters))]
+	}
+	return string(b)
+}
+
+func SanitizeFileName(fileName string) string {
+	// Remove any characters that are not alphanumeric, dot, or underscore
+	re := regexp.MustCompile(`[^a-zA-Z0-9._-]`)
+	return strings.ToLower(re.ReplaceAllString(fileName, "_"))
+}
+
 // func RegisterEntity(c *gin.Context, input interface{}, entity interface{}, uniqueFields map[string]interface{}) {
 // 	// Parse JSON body
 // 	if err := c.ShouldBindJSON(&input); err != nil {
