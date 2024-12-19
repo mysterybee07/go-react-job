@@ -153,10 +153,10 @@ func Login(c *gin.Context) {
 
 		// Send response for company
 		c.JSON(http.StatusOK, gin.H{
-			"access_token":  token,
-			"refresh_token": refreshToken,
-			"user_type":     "company",
-			"message":       "Login successful",
+			// "access_token":  token,
+			// "refresh_token": refreshToken,
+			"user_type": "company",
+			"message":   "Login successful",
 		})
 		return
 	}
@@ -185,10 +185,10 @@ func Login(c *gin.Context) {
 
 	// Send response for user
 	c.JSON(http.StatusOK, gin.H{
-		"access_token":  token,
-		"refresh_token": refreshToken,
-		"user_type":     "user",
-		"message":       "Login successful",
+		// "access_token":  token,
+		// "refresh_token": refreshToken,
+		"user_type": "user",
+		"message":   "Login successful",
 	})
 }
 

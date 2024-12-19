@@ -17,6 +17,7 @@ import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import RegisterAsUserPage from './pages/RegisterAsUserPage';
 import RegisterAsCompanyPage from './pages/RegisterAsCompanyPage';
+import { loginUser } from './services/UserServices'
 
 const App = () => {
   const router = createBrowserRouter(
@@ -24,11 +25,14 @@ const App = () => {
       <Route path="/" element={<MainLayout />}>
         <Route index element={<HomePage />} />
         <Route path="/jobs" element={<JobsPage />} />
-        <Route path='/login' element= {<LoginPage />}/>
+        {/* <Route path='/login' element= {<LoginPage />}/> */}
         <Route path='/register' element= {<RegisterPage />}/>
         <Route path='/register/user' element= {<RegisterAsUserPage />}/>
         <Route path='/register/company' element= {<RegisterAsCompanyPage />}/>
         <Route path="/add-job" element={<AddJobPage addJobSubmit={addJob} />} />
+        <Route path="/login" element={<LoginPage loginSubmit={loginUser} />} />
+
+        {/* <Route path='/'/> */}
         <Route
           path="/jobs/:id"
           element={<JobPage deleteJob={deleteJob} />}

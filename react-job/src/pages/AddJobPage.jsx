@@ -9,15 +9,12 @@ const AddJobPage = ({ addJobSubmit }) => {
     const [location, setLocation] = useState('');
     const [description, setDescription] = useState('');
     const [salary, setSalary] = useState('Under $50K');
-    // const [company_id, setCompany_id] = useState('Under $50K');
-    // const [companyName, setCompanyName] = useState('');
-    // const [companyDescription, setCompanyDescription] = useState('');
-    // const [contactEmail, setContactEmail] = useState('');
-    // const [contactPhone, setContactPhone] = useState('');
+    const [deadline, setDeadline] = useState('')
+    const [selectedCompany, setSelectedCompany] = useState(""); 
+    
 
-    const [companies, setCompanies] = useState([]); // State for fetched companies
-    const [selectedCompany, setSelectedCompany] = useState(""); // State for the selected company
-    const [loading, setLoading] = useState(true); // State to handle loading
+    const [companies, setCompanies] = useState([]); 
+    const [loading, setLoading] = useState(true); 
 
     const navigate = useNavigate();
 
@@ -35,6 +32,7 @@ const AddJobPage = ({ addJobSubmit }) => {
             location,
             description,
             salary,
+            deadline: `${deadline}T00:00:00Z`,
             company_id: Number(selectedCompany),
         };
 
@@ -164,6 +162,20 @@ const AddJobPage = ({ addJobSubmit }) => {
                                     onChange={(e) => setLocation(e.target.value)}
                                 />
                             </div>
+                            <div className="mb-4">
+                                <label htmlFor="deadline" className="block text-gray-700 font-bold mb-2">
+                                    Deadline
+                                </label>
+                                <input
+                                    type="date"
+                                    id="deadline"
+                                    name="deadline"
+                                    className="border rounded w-full py-2 px-3"
+                                    value={deadline}
+                                    onChange={(e) => setDeadline(e.target.value)}
+                                />
+                            </div>
+
 
                             <div>
                                 <h3 className="text-2xl mb-5">Company Info</h3>
