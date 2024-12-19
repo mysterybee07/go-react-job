@@ -93,8 +93,8 @@ func RegisterUser(c *gin.Context) {
 func RegisterCompany(c *gin.Context) {
 	var input payloads.RegisterCompany
 
-	// Bind JSON input
-	if err := c.ShouldBindJSON(&input); err != nil {
+	// Bind form data (handles both JSON and file data)
+	if err := c.ShouldBind(&input); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"error": fmt.Sprintf("Error parsing data. Details: %v", err.Error()),
 		})
@@ -118,7 +118,6 @@ func RegisterCompany(c *gin.Context) {
 			Name:         input.Name,
 			ContactEmail: input.ContactEmail,
 			ContactPhone: input.ContactPhone,
-			ImageUrl:     input.ImageUrl,
 			Address:      input.Address,
 		},
 		Description: input.Description,
@@ -134,6 +133,7 @@ func RegisterCompany(c *gin.Context) {
 		return
 	}
 
+	// Upload the image
 	imageUrl, err := utils.UploadImage(c)
 	if err != nil {
 		log.Printf("Error uploading image for company %s: %v", input.Name, err)
