@@ -3,36 +3,37 @@ import { toast } from 'react-toastify';
 import { useNavigate } from 'react-router-dom';
 
 const RegisterAsCompanyPage = ({ registerNewCompany }) => {
-  const navigate = useNavigate(); // Hook for navigation
+  const navigate = useNavigate();
 
-  // State variables with default values
   const [name, setName] = useState('');
   const [contactEmail, setContactEmail] = useState('');
   const [contactPhone, setContactPhone] = useState('');
   const [address, setAddress] = useState('');
-  const [imageUrl, setImageUrl] = useState('');
+  const [imageUrl, setImageUrl] = useState(null); // Store the File object
+  const [imagePreview, setImagePreview] = useState(''); // Store the preview URL
   const [description, setDescription] = useState('');
 
-  const submitForm = (e) => {
+  const submitForm = async (e) => {
     e.preventDefault();
 
-    const newCompany = {
-      name,
-      contact_email: contactEmail,
-      contact_phone: contactPhone,
-      address,
-      imageUrl,
-      description,
-    };
+    const formData = new FormData();
+    formData.append('name', name);
+    formData.append('contact_email', contactEmail);
+    formData.append('contact_phone', contactPhone);
+    formData.append('address', address);
+    formData.append('description', description);
 
-    // Call the passed-in function to register the company
-    registerNewCompany(newCompany);
+    if (imageUrl) {
+      formData.append('image_url', imageUrl); // Use 'image_url' to match the backend
+    }
 
-    // Show success notification
-    toast.success('Company registered successfully');
-
-    // Navigate to the login page
-    navigate('/login');
+    try {
+      await registerNewCompany(formData);
+      navigate('/login');
+    } catch (error) {
+      console.error('Error registering company:', error);
+      toast.error('Failed to register company');
+    }
   };
 
   return (
@@ -55,14 +56,13 @@ const RegisterAsCompanyPage = ({ registerNewCompany }) => {
               Company Profile Image
             </label>
             <div className="mt-2 flex justify-center">
-              {/* Circular Preview (Clickable) */}
               <label
                 htmlFor="image_url"
                 className="relative h-32 w-32 rounded-full border-2 border-gray-300 overflow-hidden cursor-pointer"
               >
-                {imageUrl ? (
+                {imagePreview ? (
                   <img
-                    src={imageUrl}
+                    src={imagePreview}
                     alt="Profile Preview"
                     className="h-full w-full object-cover"
                   />
@@ -71,7 +71,6 @@ const RegisterAsCompanyPage = ({ registerNewCompany }) => {
                     Click to Upload
                   </div>
                 )}
-                {/* Hidden File Input */}
                 <input
                   id="image_url"
                   name="image_url"
@@ -80,8 +79,9 @@ const RegisterAsCompanyPage = ({ registerNewCompany }) => {
                   onChange={(e) => {
                     const file = e.target.files[0];
                     if (file) {
+                      setImageUrl(file); // Store the File object
                       const reader = new FileReader();
-                      reader.onload = () => setImageUrl(reader.result);
+                      reader.onload = () => setImagePreview(reader.result); // Store the preview URL
                       reader.readAsDataURL(file);
                     }
                   }}
@@ -91,7 +91,7 @@ const RegisterAsCompanyPage = ({ registerNewCompany }) => {
             </div>
           </div>
 
-          {/* Name */}
+          {/* Other form fields */}
           <div>
             <label htmlFor="name" className="block text-sm font-medium text-gray-900">
               Full Name of Company
@@ -162,8 +162,6 @@ const RegisterAsCompanyPage = ({ registerNewCompany }) => {
               />
             </div>
           </div>
-
-
 
           {/* Description */}
           <div>

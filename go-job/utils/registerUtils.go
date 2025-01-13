@@ -23,6 +23,7 @@ func UploadImage(c *gin.Context) (string, error) {
 		log.Println("Failed to get form file:", err)
 		return "", fmt.Errorf("failed to get form file: %v", err)
 	}
+	fmt.Println(file.Filename)
 
 	// Validate that the file is an image by checking its MIME type
 	fileType := file.Header.Get("Content-Type")

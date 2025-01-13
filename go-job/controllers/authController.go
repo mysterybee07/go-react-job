@@ -170,19 +170,19 @@ func RegisterCompany(c *gin.Context) {
 
 func Login(c *gin.Context) {
 	type LoginData struct {
-		ContactEmail string `json:"contact_email"`
-		Password     string `json:"password"`
+		ContactEmail string `form:"contact_email" json:"contact_email"`
+		Password     string `form:"password" json:"password"`
 	}
 	var loginData LoginData
 
 	// Bind JSON to struct
-	if err := c.ShouldBindJSON(&loginData); err != nil {
+	if err := c.ShouldBind(&loginData); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"error": fmt.Sprintf("Error parsing data. Details: %v", err.Error()),
 		})
 		return
 	}
-
+	fmt.Println(loginData)
 	// Check for the email in User table
 	var user models.User
 	err := database.DB.Where("contact_email = ?", loginData.ContactEmail).First(&user).Error

@@ -9,6 +9,7 @@ export const addJob = async (newJob) => {
     },
     body: JSON.stringify(newJob),
   });
+  console.log(res)
   return res.json(); // Optional: Return response if needed
 };
 

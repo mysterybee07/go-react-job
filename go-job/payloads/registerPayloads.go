@@ -19,5 +19,5 @@ type RegisterCompany struct {
 	Address      string                `form:"address" json:"address"`
 	Description  string                `form:"description" json:"description"`
 	Password     string                `form:"password" json:"password"`
-	Image        *multipart.FileHeader `form:"image_url" json:"image_url"`
+	ImageUrl     *multipart.FileHeader `form:"image_url" json:"image_url"`
 }
