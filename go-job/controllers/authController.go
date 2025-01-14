@@ -274,10 +274,11 @@ func AuthorizedUser(c *gin.Context) {
 
 	// Return logged-in user's details
 	c.JSON(http.StatusOK, gin.H{
-		"data": gin.H{
-			"ID":    user.ID,
-			"email": user.ContactEmail,
-		},
+		"id":      user.ID,
+		"name":    user.Name,
+		"image":   user.ImageUrl,
+		"resume":  user.Resume,
+		"email":   user.ContactEmail,
 		"message": "User data retrieved successfully",
 	})
 }

@@ -30,7 +30,7 @@ func main() {
 		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"}, // Allowed headers
 		AllowCredentials: true,
 	}))
-
+	r.Static("/uploads", "./uploads")
 	routes.JobRoutes(r)
 
 	// Example route

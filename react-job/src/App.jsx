@@ -19,7 +19,7 @@ import RegisterAsUserPage from './pages/RegisterAsUserPage';
 import RegisterAsCompanyPage from './pages/RegisterAsCompanyPage';
 import { loginUser } from './services/LoginServices';
 import { registerCompany } from './services/CompanyServices';
-import { registerUser } from './services/UserServices';
+import { authUser, registerUser } from './services/UserServices';
 import UserProfilePage from './pages/UserProfilePage';
 import PrivateRoute from './Contexts/PrivateRoute';
 import { AuthProvider } from './Contexts/AuthContext'; // Import the AuthProvider
@@ -47,7 +47,7 @@ const App = () => {
         />
         <Route
           path="/user/profile"
-          element={<PrivateRoute><UserProfilePage /></PrivateRoute>}
+          element={<PrivateRoute><UserProfilePage authorizedUser={authUser}/></PrivateRoute>}
         />
         <Route path="/*" element={<NotFoundPage />} />
       </Route>
