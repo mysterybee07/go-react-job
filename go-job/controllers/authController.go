@@ -214,8 +214,6 @@ func Login(c *gin.Context) {
 
 		// Send response for company
 		c.JSON(http.StatusOK, gin.H{
-			// "access_token":  token,
-			// "refresh_token": refreshToken,
 			"user_type": "company",
 			"message":   "Login successful",
 		})

@@ -9,6 +9,7 @@ const RegisterAsCompanyPage = ({ registerNewCompany }) => {
   const [contactEmail, setContactEmail] = useState('');
   const [contactPhone, setContactPhone] = useState('');
   const [address, setAddress] = useState('');
+  const [password, setPassword]= useState('');
   const [imageUrl, setImageUrl] = useState(null); // Store the File object
   const [imagePreview, setImagePreview] = useState(''); // Store the preview URL
   const [description, setDescription] = useState('');
@@ -22,11 +23,12 @@ const RegisterAsCompanyPage = ({ registerNewCompany }) => {
     formData.append('contact_phone', contactPhone);
     formData.append('address', address);
     formData.append('description', description);
+    formData.append('password', password)
 
     if (imageUrl) {
       formData.append('image_url', imageUrl); // Use 'image_url' to match the backend
     }
-   
+
 
     try {
       await registerNewCompany(formData);
@@ -125,6 +127,25 @@ const RegisterAsCompanyPage = ({ registerNewCompany }) => {
                 value={contactEmail}
                 onChange={(e) => setContactEmail(e.target.value)}
                 className="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline outline-1 outline-gray-300 placeholder-gray-400 focus:outline-indigo-600"
+              />
+            </div>
+          </div>
+          <div>
+            <div className="flex items-center justify-between">
+              <label htmlFor="password" className="block text-sm/6 font-medium text-gray-900">
+                Password
+              </label>
+            </div>
+            <div className="mt-2">
+              <input
+                id="password"
+                name="password"
+                type="password"
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                autoComplete="current-password"
+                className="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6"
               />
             </div>
           </div>

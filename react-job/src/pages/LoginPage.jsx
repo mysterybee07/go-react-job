@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
+import { useAuth } from '../Contexts/AuthContext';
 
 
 const LoginPage = ({ loginSubmit }) => {
@@ -8,6 +9,9 @@ const LoginPage = ({ loginSubmit }) => {
   const [password, setPassword] = useState('');
 
   const navigate = useNavigate();
+
+  const { login } = useAuth();
+  console.log(useAuth());
 
   const submitForm = async (e) => {
     e.preventDefault();
@@ -20,12 +24,19 @@ const LoginPage = ({ loginSubmit }) => {
   
     try {
       const response = await loginSubmit(loginUser);
-      console.log(response);  // Check the response
-  
-      toast.success('Login Successful');
-      return navigate('/'); // Update with the correct redirect path
+      console.log(response);
+      const message = response.message;
+      console.log(message) // Assuming the API returns a token on successful login
+
+      if (message=='Login successful') {
+        login(message); // Save the token in cookies and update auth state
+        toast.success('Login Successful');
+        navigate('/user/profile'); // Redirect to home or desired route
+      } else {
+        throw new Error('Invalid token');
+      }
     } catch (error) {
-      console.error(error);  // Log the error
+      console.error(error);
       toast.error('Login Failed');
     }
   };
