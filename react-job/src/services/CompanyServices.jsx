@@ -5,5 +5,6 @@ export const registerCompany = async (formData) => {
     method: 'POST',
     body: formData, // Send FormData directly (no headers needed)
   });
+//   console.log(res);
   return res.json();
 };

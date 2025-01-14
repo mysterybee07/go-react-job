@@ -15,42 +15,55 @@ import (
 
 var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
 
-// UploadImage handles image uploads in Gin
-func UploadImage(c *gin.Context) (string, error) {
+func UploadFile(c *gin.Context, formFieldName string, validMimeTypes []string, uploadDir string) (string, error) {
 	// Retrieve the uploaded file
-	file, err := c.FormFile("image_url")
+	file, err := c.FormFile(formFieldName)
 	if err != nil {
 		log.Println("Failed to get form file:", err)
 		return "", fmt.Errorf("failed to get form file: %v", err)
 	}
-	fmt.Println(file.Filename)
 
-	// Validate that the file is an image by checking its MIME type
+	// Validate the file's MIME type
 	fileType := file.Header.Get("Content-Type")
-	if !strings.HasPrefix(fileType, "image/") {
-		log.Println("Uploaded file is not an image:", fileType)
-		return "", fmt.Errorf("uploaded file is not an image: %s", fileType)
+	isValidMime := false
+	for _, validType := range validMimeTypes {
+		if fileType == validType {
+			isValidMime = true
+			break
+		}
+	}
+	if !isValidMime {
+		log.Printf("Uploaded file has an invalid MIME type: %s", fileType)
+		return "", fmt.Errorf("invalid file type: %s", fileType)
 	}
 
 	// Generate a random file name and sanitize it
 	fileName := RandLetter(5) + "-" + SanitizeFileName(file.Filename)
-	filePath := filepath.Join("./uploads", fileName)
+	filePath := filepath.Join(uploadDir, fileName)
 
 	// Ensure the upload directory exists
-	uploadDir := filepath.Dir(filePath)
 	if err := os.MkdirAll(uploadDir, os.ModePerm); err != nil {
 		log.Println("Failed to create upload directory:", err)
 		return "", fmt.Errorf("failed to create upload directory: %v", err)
 	}
 
-	// Save the image file
+	// Save the uploaded file
 	if err := c.SaveUploadedFile(file, filePath); err != nil {
-		log.Println("Failed to save image file:", err)
-		return "", fmt.Errorf("failed to save image file: %v", err)
+		log.Println("Failed to save uploaded file:", err)
+		return "", fmt.Errorf("failed to save file: %v", err)
 	}
 
-	// Return the file path of the saved image
 	return filePath, nil
+}
+
+func UploadImage(c *gin.Context) (string, error) {
+	validMimeTypes := []string{"image/jpeg", "image/png", "image/gif"}
+	return UploadFile(c, "image_url", validMimeTypes, "./uploads/images")
+}
+
+func UploadResume(c *gin.Context) (string, error) {
+	validMimeTypes := []string{"application/pdf", "application/msword", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"}
+	return UploadFile(c, "resume", validMimeTypes, "./uploads/resumes")
 }
 
 // RandLetter generates a random string of length n using letters.

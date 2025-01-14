@@ -26,9 +26,11 @@ const RegisterAsCompanyPage = ({ registerNewCompany }) => {
     if (imageUrl) {
       formData.append('image_url', imageUrl); // Use 'image_url' to match the backend
     }
+   
 
     try {
       await registerNewCompany(formData);
+      toast.success("Company added successfully");
       navigate('/login');
     } catch (error) {
       console.error('Error registering company:', error);

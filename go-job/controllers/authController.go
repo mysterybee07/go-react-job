@@ -20,70 +20,76 @@ import (
 func RegisterUser(c *gin.Context) {
 	var input payloads.RegisterUser
 
-	if err := c.ShouldBindJSON(&input); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf(
-			"Failed to parse JSON body. Details: %s", err.Error(),
-		)})
+	// Bind and validate input
+	if err := c.ShouldBind(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("Failed to parse JSON body: %s", err.Error())})
 		return
 	}
-	// fmt.Println(len(input.Password))
 
+	// Hash password
 	hashPassword, err := utils.HashPassword(input.Password)
 	if err != nil {
 		log.Printf("Failed to hash password for user %s: %v", input.ContactEmail, err)
-		c.JSON(http.StatusBadRequest, gin.H{
-			"message": "Failed to process password",
-		})
+		c.JSON(http.StatusInternalServerError, gin.H{"message": "Failed to process password"})
 		return
 	}
-
 	input.Password = hashPassword
 
+	// Create user object
 	user := models.User{
 		ContactInfo: models.ContactInfo{
 			Name:         input.Name,
 			ContactEmail: input.ContactEmail,
 			ContactPhone: input.ContactPhone,
-			ImageUrl:     input.ImageUrl,
 			Address:      input.Address,
 		},
-		Resume:   input.Resume,
 		Password: input.Password,
 	}
 
+	// Check for existing user
 	var existingUser models.User
 	if err := database.DB.Where("contact_email = ? OR contact_phone = ?", user.ContactEmail, user.ContactPhone).First(&existingUser).Error; err != gorm.ErrRecordNotFound {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"error": "Email or phone number already exists.",
-		})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Email or phone number already exists."})
 		return
 	}
 
+	// Create user
 	if err := database.DB.Create(&user).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": "Could not create user. Please try again.",
-		})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not create user. Please try again."})
 		return
 	}
+
+	// Upload image
 	imageUrl, err := utils.UploadImage(c)
+	fmt.Println(input.ImageUrl.Filename)
 	if err != nil {
-		database.DB.Delete(&user)
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": fmt.Sprintf("Error uploading image. Error: %v", err.Error()),
-		})
+		log.Printf("Error uploading image for user %s: %v", user.ContactEmail, err)
+		database.DB.Delete(&user) // Rollback user creation
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to upload image."})
 		return
 	}
-	user.ImageUrl = imageUrl
+	user.ImageUrl = imageUrl // Assign image URL to user
+
+	// Upload resume
+	resume, err := utils.UploadResume(c)
+	if err != nil {
+		log.Printf("Error uploading resume for user %s: %v", user.ContactEmail, err)
+		database.DB.Delete(&user) // Rollback user creation
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to upload resume."})
+		return
+	}
+	user.Resume = resume // Assign resume to user
+
+	// Save user with image and resume
 	if err := database.DB.Save(&user).Error; err != nil {
-		// In case of error while updating user with image, delete the image file and rollback the user creation
-		os.Remove(imageUrl)
-
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": "Failed to update user image",
-		})
+		// Rollback and cleanup files
+		_ = os.Remove(imageUrl)
+		_ = os.Remove(resume)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save user data."})
 		return
 	}
 
+	// Success response
 	c.JSON(http.StatusOK, gin.H{
 		"user":    user,
 		"message": "User created successfully",

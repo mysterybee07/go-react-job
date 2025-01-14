@@ -9,7 +9,7 @@ import (
 func JobRoutes(router *gin.Engine) {
 	jobGroup := router.Group("/jobs")
 	{
-		jobGroup.POST("", controllers.CreateJob)
+		jobGroup.POST("", controllers.CreateJob, middleware.AuthMiddleware())
 		jobGroup.GET("", controllers.GetJobs)
 		jobGroup.GET("/:id", controllers.GetJobByID)
 		// jobGroup.PUT("/:id", controllers.UpdateJob)
