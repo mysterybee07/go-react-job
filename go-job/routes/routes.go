@@ -22,6 +22,7 @@ func JobRoutes(router *gin.Engine) {
 		users.POST("/login", controllers.Login)
 		users.POST("/logout", controllers.Logout)
 		users.GET("/authorize", middleware.AuthMiddleware(), controllers.AuthorizedUser)
+		users.GET("/check-auth", controllers.CheckAuth)
 		users.POST("/refresh-token", controllers.RefreshToken)
 	}
 

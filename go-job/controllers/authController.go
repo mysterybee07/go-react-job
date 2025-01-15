@@ -350,3 +350,36 @@ func RefreshToken(c *gin.Context) {
 		"message":      "New access token generated successfully",
 	})
 }
+
+func CheckAuth(c *gin.Context) {
+	// Get the access_token cookie
+	accessToken, err := c.Cookie("access_token")
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"isAuthenticated": false,
+			"message":         "Access token not found",
+		})
+		return
+	}
+
+	// Validate the JWT token
+	claims, err := utils.ValidateJWT(accessToken, true)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"isAuthenticated": false,
+			"message":         "Invalid or expired token",
+		})
+		return
+	}
+
+	// If the token is valid, the user is authenticated
+	c.JSON(http.StatusOK, gin.H{
+		"isAuthenticated": true,
+		"message":         "User is authenticated",
+		"user": gin.H{ // Include user details from claims (if needed)
+			"id":    claims.UserID,
+			"email": claims.Email,
+			// "role":  claims.Role,
+		},
+	})
+}
