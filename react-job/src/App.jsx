@@ -17,12 +17,13 @@ import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import RegisterAsUserPage from './pages/RegisterAsUserPage';
 import RegisterAsCompanyPage from './pages/RegisterAsCompanyPage';
-import { loginUser } from './services/LoginServices';
+import { loginUser } from './services/AuthServices';
 import { registerCompany } from './services/CompanyServices';
 import { authUser, registerUser } from './services/UserServices';
 import UserProfilePage from './pages/UserProfilePage';
-import PrivateRoute from './Contexts/PrivateRoute';
-import { AuthProvider } from './Contexts/AuthContext'; // Import the AuthProvider
+import { AuthProvider } from './Contexts/AuthContext';
+// import PrivateRoute from './Contexts/PrivateRoute';
+// import { AuthProvider } from './Contexts/AuthContext'; // Import the AuthProvider
 
 const App = () => {
   const router = createBrowserRouter(
@@ -35,6 +36,7 @@ const App = () => {
         <Route path='/register/company' element={<RegisterAsCompanyPage registerNewCompany={registerCompany} />} />
         <Route path="/add-job" element={<AddJobPage addJobSubmit={addJob} />} />
         <Route path="/login" element={<LoginPage loginSubmit={loginUser} />} />
+        {/* <Route path="/logout" element={<LoginPage loginSubmit={loginUser} />} /> */}
         <Route
           path="/jobs/:id"
           element={<JobPage deleteJob={deleteJob} />}
@@ -47,7 +49,7 @@ const App = () => {
         />
         <Route
           path="/user/profile"
-          element={<PrivateRoute><UserProfilePage authorizedUser={authUser}/></PrivateRoute>}
+          element={<UserProfilePage authorizedUser={authUser} />}
         />
         <Route path="/*" element={<NotFoundPage />} />
       </Route>
@@ -55,9 +57,10 @@ const App = () => {
   );
 
   return (
-    <AuthProvider> {/* Wrap the RouterProvider with AuthProvider */}
+    // Uncomment if you are using AuthProvider
+  <AuthProvider>
       <RouterProvider router={router} />
-    </AuthProvider>
+   </AuthProvider>
   );
 };
 

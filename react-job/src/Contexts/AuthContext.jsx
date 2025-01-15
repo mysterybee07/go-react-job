@@ -1,5 +1,6 @@
-import React, { createContext, useState, useEffect, useContext } from 'react';
-import Cookies from 'js-cookie';
+// contexts/AuthContext.js
+import React, { createContext, useState, useContext, useEffect } from 'react';
+import { checkAuth } from '../services/AuthServices';
 
 const AuthContext = createContext();
 
@@ -7,23 +8,16 @@ export const AuthProvider = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
-    const token = Cookies.get('access_token');  // Assuming 'authToken' is the cookie name
-    if (token) {
-      setIsAuthenticated(true);
-    } else {
-      setIsAuthenticated(false);
-    }
+    const verifyAuth = async () => {
+      const authStatus = await checkAuth();
+      setIsAuthenticated(authStatus);
+    };
+
+    verifyAuth();
   }, []);
 
-  const login = (token) => {
-    Cookies.set('access_token', token, { expires: 7, secure: true, sameSite: 'Lax' });
-    setIsAuthenticated(true);
-  };
-
-  const logout = () => {
-    Cookies.remove('access_token');
-    setIsAuthenticated(false);
-  };
+  const login = () => setIsAuthenticated(true);
+  const logout = () => setIsAuthenticated(false);
 
   return (
     <AuthContext.Provider value={{ isAuthenticated, login, logout }}>
@@ -33,4 +27,3 @@ export const AuthProvider = ({ children }) => {
 };
 
 export const useAuth = () => useContext(AuthContext);
-

@@ -1,16 +1,25 @@
-import React from 'react';
+// components/PrivateRoute.js
+import React, { useEffect, useState } from 'react';
 import { Navigate } from 'react-router-dom';
-import { useAuth } from './AuthContext';
+import { checkAuth } from '../services/AuthServices';
 
 const PrivateRoute = ({ children }) => {
-  const { isAuthenticated } = useAuth();
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  useEffect(() => {
+    const verifyAuth = async () => {
+      const authStatus = await checkAuth();
+      setIsAuthenticated(authStatus);
+    };
+
+    verifyAuth();
+  }, []);
 
   if (!isAuthenticated) {
-    // Redirect to login if not authenticated
-    return <Navigate to="/login" />;
+    return <Navigate to="/login" />; // Redirect to login if not authenticated
   }
 
-  return children;
+  return children; // Render the protected component if authenticated
 };
 
 export default PrivateRoute;

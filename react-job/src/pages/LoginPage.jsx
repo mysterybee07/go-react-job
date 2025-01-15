@@ -3,43 +3,41 @@ import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { useAuth } from '../Contexts/AuthContext';
 
-
 const LoginPage = ({ loginSubmit }) => {
   const [contactEmail, setContactEmail] = useState('');
   const [password, setPassword] = useState('');
-
+  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
-
-  const { login } = useAuth();
-  console.log(useAuth());
+  const { login } = useAuth(); // Use the login function from AuthContext
 
   const submitForm = async (e) => {
     e.preventDefault();
-    console.log('Submitting login', { contactEmail, password });  // Check the values
-  
+    setIsLoading(true);
+
     const loginUser = {
       contact_email: contactEmail,
       password,
     };
-  
+
     try {
       const response = await loginSubmit(loginUser);
-      console.log(response);
       const message = response.message;
-      console.log(message) // Assuming the API returns a token on successful login
 
-      if (message=='Login successful') {
-        login(message); // Save the token in cookies and update auth state
+      if (message === 'Login successful') {
+        login(); // Update the global authentication state
         toast.success('Login Successful');
-        navigate('/user/profile'); // Redirect to home or desired route
+        navigate('/user/profile');
       } else {
-        throw new Error('Invalid token');
+        throw new Error('Login failed: Invalid credentials');
       }
     } catch (error) {
       console.error(error);
-      toast.error('Login Failed');
+      toast.error(error.message || 'Login Failed. Please try again.');
+    } finally {
+      setIsLoading(false);
     }
   };
+
   
 
   return (
